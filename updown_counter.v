@@ -1,54 +1,71 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
-use IEEE.NUMERIC_STD.ALL;
+use IEEE.STD_LOGIC_ARITH.ALL;
+use IEEE.STD_LOGIC_UNSIGNED.ALL;
 
-entity updown_counter_split is
+entity updown_counter is
     Port (
-        i_clk        : in  STD_LOGIC;
-        i_reset      : in  STD_LOGIC;
-        o_count_up   : out STD_LOGIC_VECTOR(3 downto 0); 
-        o_count_down : out STD_LOGIC_VECTOR(3 downto 0) 
+        i_clk       : in  STD_LOGIC;
+        i_reset     : in  STD_LOGIC;
+        o_cntup     : out STD_LOGIC_VECTOR(3 downto 0);
+        o_cntdown   : out STD_LOGIC_VECTOR(3 downto 0)
     );
-end updown_counter_split;
+end updown_counter;
 
-architecture Behavioral of updown_counter_split is
+architecture Behavioral of updown_counter is
 
-    constant MAX_COUNT : unsigned(3 downto 0) := "1001";
-    signal r_cnt_up   : unsigned(3 downto 0) := (others => '0');
-    signal r_cnt_down : unsigned(3 downto 0) := MAX_COUNT;
+    constant DIV_LIMIT : integer := 2;
+    signal r_div_cnt   : integer range 0 to DIV_LIMIT := 0;
+    signal f_clk       : std_logic := '0';
+
+    constant max       : STD_LOGIC_VECTOR(3 downto 0) := "1001";
+    signal cnt_up      : STD_LOGIC_VECTOR(3 downto 0) := "0000";
+    signal cnt_down    : STD_LOGIC_VECTOR(3 downto 0) := max;
 
 begin
 
-    UP_COUNT_PROC: process(i_clk, i_reset)
+    frequency_divider: process(i_clk, i_reset)
     begin
         if i_reset = '1' then
-            r_cnt_up <= (others => '0');
+            r_div_cnt <= 0;
+            f_clk     <= '0';
         elsif rising_edge(i_clk) then
-            if r_cnt_up >= MAX_COUNT then
-                r_cnt_up <= (others => '0'); 
+            if r_div_cnt = DIV_LIMIT then
+                r_div_cnt <= 0;
+                f_clk     <= not f_clk;
             else
-                r_cnt_up <= r_cnt_up + 1;  
+                r_div_cnt <= r_div_cnt + 1;
             end if;
         end if;
-    end process UP_COUNT_PROC;
+    end process frequency_divider;
 
-    DOWN_COUNT_PROC: process(i_clk, i_reset)
+    up_counter: process(f_clk, i_reset)
     begin
         if i_reset = '1' then
-            r_cnt_down <= MAX_COUNT;
-        elsif rising_edge(i_clk) then
-            if r_cnt_down = 0 then
-                r_cnt_down <= MAX_COUNT;
+            cnt_up <= 0;
+        elsif rising_edge(f_clk) then
+            if cnt_up >= max then
+                cnt_up <= 0;
             else
-                r_cnt_down <= r_cnt_down - 1;
+                cnt_up <= cnt_up + 1;
             end if;
         end if;
-    end process DOWN_COUNT_PROC;
+    end process up_counter;
 
-    OUTPUT_PROC: process(r_cnt_up, r_cnt_down)
+    down_counter: process(f_clk, i_reset)
     begin
-        o_count_up   <= std_logic_vector(r_cnt_up);
-        o_count_down <= std_logic_vector(r_cnt_down);
-    end process OUTPUT_PROC;
+        if i_reset = '1' then
+            cnt_down <= max;
+        elsif rising_edge(f_clk) then
+            if cnt_down = 0 then
+                cnt_down <= max;
+            else
+                cnt_down <= cnt_down - 1;
+            end if;
+        end if;
+    end process down_counter;
+
+    o_cntup   <= cnt_up;
+    o_cntdown <= cnt_down;
 
 end Behavioral;
