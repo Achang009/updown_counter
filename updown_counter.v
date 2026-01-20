@@ -13,8 +13,7 @@ entity updown_counter is
 end updown_counter;
 
 architecture Behavioral of updown_counter is
-
-    constant DIV_LIMIT : integer := 2;
+    constant DIV_LIMIT : integer := 25000000; -- 要模擬的話改0
     signal r_div_cnt   : integer range 0 to DIV_LIMIT := 0;
     signal f_clk       : std_logic := '0';
 
@@ -69,3 +68,4 @@ begin
     o_cntdown <= cnt_down;
 
 end Behavioral;
+
