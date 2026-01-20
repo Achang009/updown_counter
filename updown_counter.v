@@ -16,9 +16,9 @@ architecture Behavioral of updown_counter is
 
     signal bin_cnt : STD_LOGIC_VECTOR(24 downto 0) := (others => '0');
     signal f_clk   : std_logic := '0';
-
+    constant min      : STD_LOGIC_VECTOR(3 downto 0) := "0000";
     constant max      : STD_LOGIC_VECTOR(3 downto 0) := "1001";
-    signal cnt_up     : STD_LOGIC_VECTOR(3 downto 0) := "0000";
+    signal cnt_up     : STD_LOGIC_VECTOR(3 downto 0) := min;
     signal cnt_down   : STD_LOGIC_VECTOR(3 downto 0) := max;
 
 begin
@@ -37,10 +37,10 @@ begin
     up_counter: process(f_clk, i_reset)
     begin
         if i_reset = '1' then
-            cnt_up <= "0000";
+            cnt_up <= min;
         elsif rising_edge(f_clk) then
             if cnt_up >= max then
-                cnt_up <= "0000";
+                cnt_up <= min;
             else
                 cnt_up <= cnt_up + 1;
             end if;
@@ -52,7 +52,7 @@ begin
         if i_reset = '1' then
             cnt_down <= max;
         elsif rising_edge(f_clk) then
-            if cnt_down = "0000" then
+            if cnt_down = min then
                 cnt_down <= max;
             else
                 cnt_down <= cnt_down - 1;
@@ -64,3 +64,4 @@ begin
     o_cntdown <= cnt_down;
 
 end Behavioral;
+
